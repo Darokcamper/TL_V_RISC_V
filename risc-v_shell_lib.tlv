@@ -172,14 +172,24 @@
     $is_bltu ? $src1_value < $src2_value :
     $is_bgeu ? $src1_value >= $src2_value :
                1'b0;
+   
+   //jump
+   $jalr_tgt_pc[31:0] = ($src1_value + $imm) & ~1;
+
    //target PC
    $br_tgt_pc[31:0] = $pc + $imm;
    
+   //$next_pc[31:0] =
+   // $reset ? 32'b0 :
+   // $taken_br ? $br_tgt_pc :
+   //             $pc + 32'h4; // Default to next sequential PC
+   // Target PC Logic
    $next_pc[31:0] =
-    $reset ? 32'b0 :
-    $taken_br ? $br_tgt_pc :
-                $pc + 32'h4; // Default to next sequential PC
-
+    $reset ? 32'b0 :                   // Reset condition
+    ($taken_br || $is_jal) ? $br_tgt_pc :  // Branch or JAL
+    $is_jalr ? $jalr_tgt_pc :          // JALR
+               $pc + 32'h4;            // Default: Next sequential instruction
+   
    // Assert these to end simulation (before Makerchip cycle limit).
    m4+tb()
    *failed = *cyc_cnt > M4_MAX_CYC;
