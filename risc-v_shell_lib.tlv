@@ -158,6 +158,8 @@
                     {31'b0, $src1_value[31]}) :
     $is_sra ? $sra_rslt[31:0] :
     $is_srai ? $srai_rslt[31:0] :
+    $is_load  ? $src1_value + $imm :   // Address for load
+    $is_s_instr ? $src1_value + $imm : // Address for store
                32'b0;
    
    //RF Write
@@ -190,6 +192,10 @@
     $is_jalr ? $jalr_tgt_pc :          // JALR
                $pc + 32'h4;            // Default: Next sequential instruction
    
+   //load&store
+   $addr[31:0] = $rs1 + $imm;
+   $rd = memory[$addr];  // Read value from memory
+   memory[$addr] = $rs2;
    // Assert these to end simulation (before Makerchip cycle limit).
    m4+tb()
    *failed = *cyc_cnt > M4_MAX_CYC;
