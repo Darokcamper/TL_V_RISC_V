@@ -47,7 +47,7 @@
    // ...
    //PC
    $pc[31:0] = >>1$next_pc;
-   $next_pc[31:0] = $reset ? 32'b0 : $pc + 32'h4;
+   //$next_pc[31:0] = $reset ? 32'b0 : $pc + 32'h4;
    
    //IMem
    `READONLY_MEM($pc, $$instr[31:0])
@@ -101,9 +101,26 @@
     $is_addi ? $src1_value + $imm :
     $is_add ? $src1_value + $src2_value :
                32'b0;
-               
+   
    //RF Write
    $wr_en = $rd_valid && ($rd != 5'b0);
+
+   //Branch Inst
+   $taken_br =
+    $is_beq ? $src1_value == $src2_value :
+    $is_bne ? $src1_value != $src2_value :
+    $is_blt ? ($src1_value < $src2_value) ^ ($src1_value[31] != $src2_value[31]):
+    $is_bge ? ($src1_value >= $src2_value) ^ ($src1_value[31] != $src2_value[31]):
+    $is_bltu ? $src1_value < $src2_value :
+    $is_bgeu ? $src1_value >= $src2_value :
+               1'b0;
+   //target PC
+   $br_tgt_pc[31:0] = $pc + $imm;
+   
+   $next_pc[31:0] =
+    $reset ? 32'b0 :
+    $taken_br ? $br_tgt_pc :
+                $pc + 32'h4; // Default to next sequential PC
 
    // Assert these to end simulation (before Makerchip cycle limit).
    *passed = 1'b0;
