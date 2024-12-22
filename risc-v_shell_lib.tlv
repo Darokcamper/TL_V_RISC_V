@@ -158,13 +158,13 @@
                     {31'b0, $src1_value[31]}) :
     $is_sra ? $sra_rslt[31:0] :
     $is_srai ? $srai_rslt[31:0] :
-    $is_load  ? $src1_value + $imm :   // Address for load
+    $is_load ? $src1_value + $imm :   // Address for load
     $is_s_instr ? $src1_value + $imm : // Address for store
                32'b0;
    
    //RF Write
    $wr_en = $rd_valid && ($rd != 5'b0);
-
+   
    //Branch Inst
    $taken_br =
     $is_beq ? $src1_value == $src2_value :
@@ -177,7 +177,7 @@
    
    //jump
    $jalr_tgt_pc[31:0] = ($src1_value + $imm) & ~1;
-
+   
    //target PC
    $br_tgt_pc[31:0] = $pc + $imm;
    
@@ -191,13 +191,17 @@
     ($taken_br || $is_jal) ? $br_tgt_pc :  // Branch or JAL
     $is_jalr ? $jalr_tgt_pc :          // JALR
                $pc + 32'h4;            // Default: Next sequential instruction
-
+   
+   //load&store
+   $wr_data[31:0] = $is_load ? $ld_data : $result;
+   
    // Assert these to end simulation (before Makerchip cycle limit).
    m4+tb()
    *failed = *cyc_cnt > M4_MAX_CYC;
    
-   m4+rf(32, 32, $reset, $wr_en, $rd, $result, $rs1_valid, $rs1, $src1_value, $rs2_valid, $rs2, $src2_value)
-   //m4+dmem(32, 32, $reset, $addr[4:0], $wr_en, $wr_data[31:0], $rd_en, $rd_data)
+   //m4+rf(32, 32, $reset, $wr_en, $rd, $result, $rs1_valid, $rs1, $src1_value, $rs2_valid, $rs2, $src2_value)
+   m4+rf(32, 32, $reset, $wr_en, $rd, $wr_data, $rs1_valid, $rs1, $src1_value, $rs2_valid, $rs2, $src2_value)
+   m4+dmem(32, 32, $reset, $result[6:2], $is_s_instr, $src2_value, $is_load, $ld_data)
    m4+cpu_viz()
 \SV
    endmodule
