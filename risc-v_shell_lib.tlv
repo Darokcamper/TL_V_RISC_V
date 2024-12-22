@@ -191,11 +191,7 @@
     ($taken_br || $is_jal) ? $br_tgt_pc :  // Branch or JAL
     $is_jalr ? $jalr_tgt_pc :          // JALR
                $pc + 32'h4;            // Default: Next sequential instruction
-   
-   //load&store
-   $addr[31:0] = $rs1 + $imm;
-   $rd = memory[$addr];  // Read value from memory
-   memory[$addr] = $rs2;
+
    // Assert these to end simulation (before Makerchip cycle limit).
    m4+tb()
    *failed = *cyc_cnt > M4_MAX_CYC;
@@ -205,3 +201,4 @@
    m4+cpu_viz()
 \SV
    endmodule
+                   
